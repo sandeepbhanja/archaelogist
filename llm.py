@@ -1,3 +1,5 @@
+import json
+
 import requests
 import os
 from dotenv import load_dotenv
@@ -8,7 +10,6 @@ load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 URL = f"https://generativelanguage.googleapis.com/v1beta/interactions?key={API_KEY}"
 EMBEDDING_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-2:embedContent"
-
 
 
 def createPayload(input,previousInteractionId):
@@ -83,3 +84,16 @@ def createPayload(input,previousInteractionId):
 def sendLLMRequest(payload):
 	response = requests.post(URL, json=payload)
 	return response.json()
+
+def sendEmbeddingRequest(payload):
+	headers = {"x-goog-api-key":API_KEY}
+	body = {
+		 "model": "models/gemini-embedding-2",
+        "content": {
+        "parts": [{
+            "text": payload
+        }]
+        }
+    }
+	response = requests.post(EMBEDDING_URL,headers=headers,json=body)
+	return response.json().get("embedding").get("values")
