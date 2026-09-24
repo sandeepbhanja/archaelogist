@@ -97,3 +97,30 @@ def sendEmbeddingRequest(payload):
     }
 	response = requests.post(EMBEDDING_URL,headers=headers,json=body)
 	return response.json().get("embedding").get("values")
+
+def createInvestigationPayload(input:str):
+	payload = {
+        "model": "models/gemini-3.1-flash-lite",
+        "input": input,
+        "system_instruction":"Given this investigation goal, break it down into a short list of specific sub-questions that need to be answered to fully address it. Do not answer them yet — just list the sub-questions",
+        "generation_config": {
+            "max_output_tokens": 1024,
+            "thinking_level": "low",
+            "temperature":1.0
+        },
+        "response_format": {
+            "type": "text",
+            "mime_type": "application/json",
+            "schema": {
+              "type": "object",
+              "properties": {
+				  "sub_questions": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "A list of specific, answerable sub-questions that together fully address the investigation goal. Each sub-question should point toward a concrete piece of evidence to look for (a method call, a schema relationship, a code path) — not be a restatement of the overall goal, and not attempt to answer itself. These are questions to investigate next, not conclusions."
+                }
+              }
+            }
+          }
+    }
+	return payload

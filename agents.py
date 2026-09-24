@@ -3,17 +3,20 @@ import json
 from queue import PriorityQueue
 import numpy as np
 from numpy.linalg import norm
-from llm import createPayload, sendEmbeddingRequest, sendLLMRequest
+from llm import createInvestigationPayload, createPayload, sendEmbeddingRequest, sendLLMRequest
 from tools import get_keyword_result, get_call_references
 
 scratchpad = []
 flatVectorStore = []
 
-def ReActLoop(query: str,max_iterations=5):
-    payload = createPayload(query, None)
+def ReActLoop(query: str,max_iterations=10):
+    sub_questions = plan_investigation(query)
+    final_query = f"""Goal:{query}, Sub-questions to investigate":{sub_questions}"""
+    payload = createPayload(final_query, None)
     response = sendLLMRequest(payload)
     retrieve_related(query)
     for i in range(max_iterations):
+        print(f"working response = {response}")
         steps = response.get("steps")
         if not steps:
             print("NO LLM RESPONSE")
@@ -100,3 +103,16 @@ def retrieve_related(query_text, top_k=3):
         top_k_similarity.append({"similarity":-1*similarity,"text":text})
         i = i+1
     print(f"top_k_similarity = {top_k_similarity}")
+
+def plan_investigation(goal:str):
+    investigationPayload = createInvestigationPayload(goal)
+    response = sendLLMRequest(investigationPayload)
+    print(response)
+    steps = response.get("steps")
+    sub_questions = []
+    if(steps):
+        print("Plan Investigation = "+steps[-1].get("content")[-1].get("text"))
+        sub_questions = json.loads(steps[-1].get("content")[-1].get("text")).get("sub_questions")
+
+    return sub_questions
+     

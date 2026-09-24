@@ -74,5 +74,3 @@ def get_keyword_result(keyword):
 
 	print(matches)
 	return matches
-
-
